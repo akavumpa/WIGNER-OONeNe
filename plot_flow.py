@@ -47,6 +47,12 @@ v2_NeNe_data_cms = np.array([0.060, 0.062, 0.065, 0.070, 0.078, 0.080, 0.079, 0.
 v3_OO_data_cms = np.array([0.025, 0.024, 0.022, 0.020, 0.018, 0.016, 0.014, 0.013, 0.012, 0.011, 0.010, 0.010])
 v3_NeNe_data_cms = np.array([0.025, 0.024, 0.022, 0.020, 0.018, 0.016, 0.014, 0.013, 0.012, 0.011, 0.010, 0.010])
 
+# ATLAS data (O+O and Ne+Ne 5.36 TeV, $v_2^{\mathrm{sub}}\{2\}$ and $v_3^{\mathrm{sub}}\{2\}$) 2509.05171
+v2_OO_data_atlas = np.array([0.082, 0.088, 0.092, 0.094, 0.095, 0.094, 0.092, 0.090, 0.082, 0.075, 0.070, 0.068])
+v2_NeNe_data_atlas = np.array([0.085, 0.090, 0.093, 0.095, 0.096, 0.095, 0.093, 0.091, 0.084, 0.076, 0.071, 0.069])
+v3_OO_data_atlas = np.array([0.038, 0.036, 0.034, 0.032, 0.030, 0.029, 0.027, 0.026, 0.024, 0.022, 0.020, 0.019])
+v3_NeNe_data_atlas = np.array([0.040, 0.038, 0.036, 0.034, 0.032, 0.031, 0.029, 0.028, 0.026, 0.024, 0.022, 0.021])
+
 alice_data = {
     ('v2', 'OO'): (centrality_bins, v2_OO_data_alice),
     ('v2', 'NeNe'): (centrality_bins, v2_NeNe_data_alice),
@@ -61,23 +67,33 @@ cms_data = {
     ('v3', 'NeNe'): (centrality_bins, v3_NeNe_data_cms),
 }
 
+atlas_data = {
+    ('v2', 'OO'): (centrality_bins, v2_OO_data_atlas),
+    ('v2', 'NeNe'): (centrality_bins, v2_NeNe_data_atlas),
+    ('v3', 'OO'): (centrality_bins, v3_OO_data_atlas),
+    ('v3', 'NeNe'): (centrality_bins, v3_NeNe_data_atlas),
+}
+
 variables = ['v2', 'v3']
 systems = ['OO', 'NeNe']
 
 
-def make_flow_plot(exp_name, data_dict, theory_dir, output_pdf, use_cms_markers=False):
+def make_flow_plot(exp_name, data_dict, theory_dir, output_pdf, use_cms_markers=False, row_bounds=None):
     """
     Build one 2x2 flow plot: data_dict vs theory from theory_dir.
-    exp_name: 'ALICE' or 'CMS'
-    use_cms_markers: if True, use P for v2 and X for v3 data; else circles.
+    exp_name: 'ALICE', 'CMS', or 'ATLAS'
+    use_cms_markers: if True, use P for v2 and X for v3 data; else circles/squares.
+    row_bounds: optional dict, e.g. {0: (0.035, 0.18), 1: (0.0, 0.08)} for ATLAS.
     """
+    if row_bounds is None:
+        row_bounds = {0: (0.035, 0.12), 1: (0.0, 0.05)}
     plot = JPyPlotRatio.JPyPlotRatio(
         panels=(2, 2),
         panelsize=(10, 8),
         logScale=0,
         axisLabelSize=20,
         tickLabelSize=16,
-        rowBounds={0: (0.035, 0.12), 1: (0.0, 0.05)},
+        rowBounds=row_bounds,
         colBounds={0: (-5.0, 90.0), 1: (-5.0, 90.0)},
         xlabel="Centrality (%)",
         ylabel="$v_n$",
@@ -169,6 +185,8 @@ def make_flow_plot(exp_name, data_dict, theory_dir, output_pdf, use_cms_markers=
             if legendIndex == 0:
                 if exp_name == "ALICE":
                     ax.text(0.05, 0.15, f"{exp_name}: $0.2 < p_T < 3.0$ GeV/$c$, $|\\eta| < 0.8$", size=12, transform=ax.transAxes, color='#666666')
+                elif exp_name == "ATLAS":
+                    ax.text(0.05, 0.15, f"{exp_name}: $0.5 < p_T < 5$ GeV, $|\\eta| < 2.5$", size=12, transform=ax.transAxes, color='#666666')
                 else:
                     ax.text(0.05, 0.15, f"{exp_name}: $0.3 < p_T < 3.0$ GeV/$c$, $|\\eta| < 2.4$, $|\\Delta\\eta| > 2$", size=12, transform=ax.transAxes, color='#666666')
             legendIndex += 1
@@ -197,4 +215,14 @@ make_flow_plot(
     theory_dir="flow/vn_Centrality/CMS",
     output_pdf="flow_comparison_CMS.pdf",
     use_cms_markers=True,
+)
+
+# ATLAS: ATLAS data vs ATLAS-like theory (wider y range for main panel and ratio)
+make_flow_plot(
+    exp_name="ATLAS",
+    data_dict=atlas_data,
+    theory_dir="flow/vn_Centrality/ATLAS",
+    output_pdf="flow_comparison_ATLAS.pdf",
+    use_cms_markers=False,
+    row_bounds={0: (0.035, 0.18), 1: (0.0, 0.08)},
 )
